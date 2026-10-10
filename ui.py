@@ -14,6 +14,7 @@ import state
 import automation as core
 import config
 import profiles
+import workers
 
 class RegionSelector:
     def __init__(self, parent, title):
@@ -196,6 +197,36 @@ class Application:
             command=self.stop,
         )
         self.stop_button.grid(row=0, column=3, padx=3)
+
+        tk.Button(
+                    controls,
+                    text="Select Backpack",
+                    width=15,
+                    command=self.select_backpack,
+                ).grid(row=1, column=2, padx=3, pady=5)
+
+        tk.Button(
+            controls,
+            text="Select Ring Slot",
+            width=15,
+            command=self.select_ring_slot,
+        ).grid(row=1, column=3, padx=3, pady=5)
+
+        self.ring_start_button = tk.Button(
+            controls,
+            text="START RING",
+            width=13,
+            command=self.start_ring,
+        )
+        self.ring_start_button.grid(row=2, column=0, padx=3, pady=5)
+
+        self.ring_stop_button = tk.Button(
+            controls,
+            text="STOP RING",
+            width=13,
+            command=self.stop_ring,
+        )
+        self.ring_stop_button.grid(row=2, column=1, padx=3, pady=5)
 
         tk.Button(
             controls,
@@ -568,27 +599,62 @@ class Application:
             core.log(
                 f"Battlelist selected: {state.battlelist_region}"
         )    # ========================================================
+    
+    def select_backpack(self):
+        selector = RegionSelector(
+            self.root,
+            "Select Backpack Area",
+        )
+
+        self.root.wait_window(selector.window)
+
+        if selector.result:
+            state.backpack_slot_region = selector.result
+            self.update_region_text()
+
+            core.log(
+                f"Backpack area selected: {state.backpack_slot_region}"
+            )
+
+    def select_ring_slot(self):
+        selector = RegionSelector(
+            self.root,
+            "Select Ring Equipment Slot",
+        )
+
+        self.root.wait_window(selector.window)
+
+        if selector.result:
+            state.ring_equipment_region = selector.result
+            self.update_region_text()
+
+            core.log(
+                f"Ring equipment slot selected: "
+                f"{state.ring_equipment_region}"
+            )
     # UPDATE REGION TEXT
     # ========================================================
 
     def update_region_text(self):
+        def describe(name, region):
+            if region:
+                x, y, w, h = region
+                return f"{name}: X={x} Y={y} W={w} H={h}"
+            return f"{name}: not selected"
 
-        if state.minimap_region:
-            x, y, w, h = state.minimap_region
-            mini = f"Minimap: X={x} Y={y} W={w} H={h}"
-        else:
-            mini = "Minimap: not selected"
-
-        if state.battlelist_region:
-            x, y, w, h = state.battlelist_region
-            battle = f"Battlelist: X={x} Y={y} W={w} H={h}"
-        else:
-            battle = "Battlelist: not selected"
+        regions = [
+            describe("Minimap", state.minimap_region),
+            describe("Battlelist", state.battlelist_region),
+            describe("Backpack", state.backpack_slot_region),
+            describe("Ring Slot", state.ring_equipment_region),
+        ]
 
         self.region_label.config(
-            text=f"{mini} | {battle}"
+            text="\n".join(regions),
+            justify="left",
+            anchor="w",
         )
-
+    
     def save_profile(self):
         if state.running:
             messagebox.showwarning(
@@ -855,6 +921,30 @@ class Application:
 
         core.log("AUTOMATION STOPPED")
 
+#RING WORKER
+
+    def start_ring(self):
+        if state.ring_equipment_region is None:
+            messagebox.showerror(
+                "Ring manager",
+                "Configure the ring equipment region first.",
+            )
+            return
+
+        if state.backpack_slot_region is None:
+            messagebox.showerror(
+                "Ring manager",
+                "Configure the backpack region first.",
+            )
+            return
+
+        if workers.manager.start("RingManager", workers.ring_worker):
+            core.log("Independent ring monitoring started")
+
+
+    def stop_ring(self):
+        workers.manager.stop("RingManager")
+        core.log("Ring monitoring stop requested")
 
 def main():
     root = tk.Tk()

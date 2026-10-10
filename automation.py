@@ -1,6 +1,6 @@
 
 import time
-
+import ring_manager
 import state
 from config import (
     SCAN_INTERVAL,

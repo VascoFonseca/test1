@@ -9,10 +9,9 @@ ui = None
 
 ring_source_region = None
 ring_equipment_region = None
-last_ring_action_time = 0.0
-
 backpack_slot_region = None
-
+ring_equipment_region = (860, 236, 33, 33)
+backpack_slot_region = (18, 485, 146, 183)
 last_ring_check_time = 0.0
 last_ring_click_time = 0.0
 

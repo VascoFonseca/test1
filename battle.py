@@ -59,9 +59,9 @@ def detect_red_pixels(image):
     r = image[:, :, 2].astype(np.int16)
 
     red_mask = (
-        (r > RED_MIN)
-        & (r > g * RED_RATIO)
-        & (r > b * RED_RATIO)
+        (r == 255)
+        & (g == 0)
+        & (b == 0)
     )
 
     red_pixels = int(np.sum(red_mask))
