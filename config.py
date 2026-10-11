@@ -1,4 +1,5 @@
 import logging
+import random
 
 FIRST_WINDOW = "Projector - Source: Game Capture"
 SECOND_WINDOW = "Eder Mamute"
@@ -6,8 +7,8 @@ SECOND_WINDOW = "Eder Mamute"
 RING_MATCH_THRESHOLD = 0.90
 EMPTY_SLOT_MAX_DIFFERENCE = 15.0
 
-RING_CHECK_INTERVAL = 1.0
-RING_CLICK_COOLDOWN = 5.0
+RING_CHECK_INTERVAL = 0.5
+RING_CLICK_COOLDOWN = 0.5
 
 RING_TEMPLATE_FILE = "templates/ring.png"
 EMPTY_SLOT_TEMPLATE_FILE = "templates/empty_slot.png"
@@ -21,6 +22,34 @@ MATCH_THRESHOLD = 0.85
 # More precise arrival detection
 ARRIVAL_TOLERANCE_X = 4
 ARRIVAL_TOLERANCE_Y = 4
+
+# =========================
+# POTION WORKER
+# =========================
+
+HP_POTION_KEY = "F1"
+MANA_POTION_KEY = "F2"
+
+POTION_COOLDOWN = 1.5
+VITALS_CHECK_INTERVAL = 0.15
+
+# Potion thresholds, expressed as percentages.
+HP_POTION_THRESHOLD = 50
+MANA_POTION_THRESHOLD = 30
+
+# OCR / worker settings
+OCR_CHECK_INTERVAL = 0.25
+POTION_COOLDOWN = 1.5
+
+
+
+# =========================
+# MAGIC TRAINING WORKER
+# =========================
+
+MAGIC_SPELL_KEY = "F8"
+MAGIC_MIN_MANA_PERCENT = 30
+MAGIC_CAST_INTERVAL = random.randint(2,5)
 
 # Destination must be centered for 3 consecutive checks
 ARRIVAL_REQUIRED_CHECKS = 3
