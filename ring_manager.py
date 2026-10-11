@@ -90,13 +90,13 @@ def _find_ring_in_backpack():
         return None
 
     # Use the centre of all matching pixels as the drag position.
-    center_x = int(np.mean(xs))
-    center_y = int(np.mean(ys))
+    match_x = int(xs[0])
+    match_y = int(ys[0])
 
     region_x, region_y, _, _ = state.backpack_slot_region
 
-    screen_x = region_x + center_x
-    screen_y = region_y + center_y
+    screen_x = region_x + match_x
+    screen_y = region_y + match_y
 
     log(
         f"Ring manager: found {len(xs)} matching pixels "

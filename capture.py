@@ -1,9 +1,15 @@
+import cv2
 import state
 
 from config import FIRST_WINDOW
 from logger import log
 from windows import get_window, capture_window_background
+import sys
+from pathlib import Path
 
+RADAR_PARENT = Path(r"C:\Users\PC\Desktop\TIBSBOTS")
+if str(RADAR_PARENT) not in sys.path:
+    sys.path.insert(0, str(RADAR_PARENT))
 
 def capture_region(region):
     if region is None:
@@ -35,6 +41,25 @@ def capture_region(region):
 
     except Exception as e:
         log(f"Background capture error: {e!r}", "error")
+        return None
+
+
+def capture_radar_screenshot():
+    """
+    Capture the entire first window in grayscale for radar detection.
+    The radar locator needs the full window, not just the minimap crop.
+    """
+    try:
+        first = get_window(FIRST_WINDOW)
+        image = capture_window_background(first)
+
+        if image is None:
+            return None
+
+        return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    except Exception as e:
+        log(f"Radar screenshot error: {e!r}", "error")
         return None
 
 

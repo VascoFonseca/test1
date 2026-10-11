@@ -151,7 +151,7 @@ class Application:
 
         self.root = root
         root.title("Sequential Minimap Route")
-        root.geometry("500x550")
+        root.geometry("900x900")
         root.resizable(False, False)
         
         synchronize_window_size()
@@ -212,21 +212,64 @@ class Application:
             command=self.select_ring_slot,
         ).grid(row=1, column=3, padx=3, pady=5)
 
-        self.ring_start_button = tk.Button(
+        tk.Button(
             controls,
-            text="START RING",
-            width=13,
-            command=self.start_ring,
-        )
-        self.ring_start_button.grid(row=2, column=0, padx=3, pady=5)
+            text="Select HP Value",
+            width=18,
+            command=self.select_hp_bar,
+        ).grid(row=2, column=0, padx=5, pady=5)
 
-        self.ring_stop_button = tk.Button(
+        tk.Button(
             controls,
-            text="STOP RING",
-            width=13,
-            command=self.stop_ring,
-        )
-        self.ring_stop_button.grid(row=2, column=1, padx=3, pady=5)
+            text="Select Mana Value",
+            width=18,
+            command=self.select_mana_bar,
+        ).grid(row=2, column=1, padx=5, pady=5)
+
+        # Worker selection
+        self.potions_var = tk.BooleanVar(value=True)
+        self.magic_var = tk.BooleanVar(value=False)
+        self.ring_var = tk.BooleanVar(value=False)
+
+        tk.Label(
+            controls,
+            text="Select workers:",
+            font=("Arial", 11, "bold"),
+        ).grid(row=5, column=0, sticky="w", padx=5, pady=5)
+
+
+
+        tk.Checkbutton(
+            controls,
+            text="HP / Mana Potions",
+            variable=self.potions_var,
+        ).grid(row=6, column=0, sticky="w", padx=5)
+
+        tk.Checkbutton(
+            controls,
+            text="Magic Training",
+            variable=self.magic_var,
+        ).grid(row=6, column=1, sticky="w", padx=5)
+
+        tk.Checkbutton(
+            controls,
+            text="Ring Worker",
+            variable=self.ring_var,
+        ).grid(row=6, column=2, sticky="w", padx=5)
+
+        tk.Button(
+            controls,
+            text="START",
+            width=18,
+            command=self.start_selected_workers,
+        ).grid(row=7, column=0, padx=5, pady=12)
+
+        tk.Button(
+            controls,
+            text="STOP ALL",
+            width=18,
+            command=self.stop_all_workers,
+        ).grid(row=7, column=1, padx=5, pady=12)
 
         tk.Button(
             controls,
@@ -921,6 +964,66 @@ class Application:
 
         core.log("AUTOMATION STOPPED")
 
+    def start_selected_workers(self):
+        selected = []
+
+        if self.potions_var.get():
+            if (
+                state.hp_bar_region is None
+                or state.mana_bar_region is None
+            ):
+                messagebox.showerror(
+                    "Configuration",
+                    "Select both HP and mana bars first.",
+                )
+                return
+
+            selected.append(
+                ("PotionWorker", workers.potion_worker)
+            )
+
+        if self.magic_var.get():
+            if state.mana_bar_region is None:
+                messagebox.showerror(
+                    "Configuration",
+                    "Select the mana bar first.",
+                )
+                return
+
+            selected.append(
+                ("MagicTraining", workers.magic_training_worker)
+            )
+
+        if self.ring_var.get():
+            selected.append(
+                ("RingWorker", workers.ring_worker)
+            )
+
+        if not selected:
+            messagebox.showwarning(
+                "No workers selected",
+                "Select at least one worker.",
+            )
+            return
+
+        for name, function in selected:
+            try:
+                workers.manager.start(name, function)
+                core.log(f"Starting {name}")
+            except Exception as exc:
+                core.log(f"Failed to start {name}: {exc!r}", "error")
+
+    def stop_all_workers(self):
+        for name in (
+            "PotionWorker",
+            "MagicTraining",
+            "RingWorker",
+        ):
+            try:
+                workers.manager.stop(name)
+            except Exception as exc:
+                core.log(f"Failed to stop {name}: {exc!r}", "error")
+
 #RING WORKER
 
     def start_ring(self):
@@ -945,6 +1048,68 @@ class Application:
     def stop_ring(self):
         workers.manager.stop("RingManager")
         core.log("Ring monitoring stop requested")
+   
+    def select_hp_bar(self):
+        selector = RegionSelector(self.root, "Select HP Bar")
+        self.root.wait_window(selector.window)
+
+        if selector.result:
+            state.hp_bar_region = selector.result
+            core.log(f"HP bar region: {selector.result}")
+
+    def select_mana_bar(self):
+        selector = RegionSelector(self.root, "Select Mana Bar")
+        self.root.wait_window(selector.window)
+
+        if selector.result:
+            state.mana_bar_region = selector.result
+            core.log(f"Mana bar region: {selector.result}")
+
+
+
+    def start_potions(self):
+        if state.hp_bar_region is None or state.mana_bar_region is None:
+            messagebox.showerror(
+                "Potion worker",
+                "Select both the HP bar and mana bar first.",
+            )
+            return
+
+        started = workers.manager.start(
+            "PotionWorker",
+            workers.potion_worker,
+        )
+
+        if started:
+            core.log("Potion worker started")
+        else:
+            core.log("Potion worker is already running")
+
+    def stop_potions(self):
+        workers.manager.stop("PotionWorker")
+        core.log("Potion worker stop requested")
+
+    def start_magic_training(self):
+        if state.mana_bar_region is None:
+            messagebox.showerror(
+                "Magic training",
+                "Select the mana bar first.",
+            )
+            return
+
+        started = workers.manager.start(
+            "MagicTraining",
+            workers.magic_training_worker,
+        )
+
+        if started:
+            core.log("Magic training started")
+        else:
+            core.log("Magic training is already running")
+
+    def stop_magic_training(self):
+        workers.manager.stop("MagicTraining")
+        core.log("Magic training stop requested")
 
 def main():
     root = tk.Tk()

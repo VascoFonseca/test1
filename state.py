@@ -26,3 +26,7 @@ current_destination_match = None
 
 
 last_click_time = 0
+
+# Health and mana bar regions: (x, y, width, height)
+hp_value_region = None
+mana_value_region = None
